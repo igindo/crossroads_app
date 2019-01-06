@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'package:crossroads/crossroads.dart';
@@ -16,6 +18,7 @@ class MyApp extends StatefulWidget {
 }
 
 class SnapshotState extends State<MyApp> {
+  final int size = 320;
   Map<Actor, Point> _snapshot;
   Bounds bounds;
   Point roadSize;
@@ -23,16 +26,9 @@ class SnapshotState extends State<MyApp> {
 
   @override
   void initState() {
-    final accessPoints = <AccessPoint>[
-      AccessPoint.ne2,
-      AccessPoint.nw1,
-      AccessPoint.se3,
-      AccessPoint.sw2
-    ];
-    final setup = TileSetup(320, accessPoints);
-    bounds = Bounds(Point(-setup.size / 2, 0), Point(0, -setup.size / 4),
-        Point(setup.size / 2, 0), Point(0, setup.size / 4), setup.size / 64);
-    roadSize = Point(setup.size / 25, setup.size / 50);
+    bounds = Bounds(Point(-size / 2, 0), Point(0, -size / 4),
+        Point(size / 2, 0), Point(0, size / 4), size / 64);
+    roadSize = Point(size / 25, size / 50);
     network = Network(calculateTemplates(bounds, roadSize)
         .expand((template) => template.toConnections())
         .toList(growable: false));
@@ -48,11 +44,23 @@ class SnapshotState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final accessPoints = <AccessPoint>[
-      AccessPoint.ne2,
-      AccessPoint.nw2,
-      AccessPoint.se2
-    ];
+    final paths = <List<Connection>>[];
+    final connections = <Connection>[];
+    final setup = TileSetup(size, _randomAccessPoints());
+
+    setup.accesPoints.forEach((start) {
+      setup.accesPoints.where((ap) => ap != start).forEach((end) {
+        final pathA = resolveConnection(network, _resolveStartingPoint(start),
+                _resolveEndingPoint(end)),
+            pathB = resolveConnection(network, _resolveStartingPoint(end),
+                _resolveEndingPoint(start));
+
+        paths.add(pathA);
+        paths.add(pathB);
+
+        connections..addAll(pathA)..addAll(pathB);
+      });
+    });
 
     return CustomMultiChildLayout(delegate: Delegate(), children: [
       /*CustomPaint(
@@ -61,10 +69,90 @@ class SnapshotState extends State<MyApp> {
       LayoutId(
           id: 'tile',
           child: CustomPaint(
-            painter: TileDrawer(
-                TileSetup(320, accessPoints), bounds, roadSize, network),
+            painter: TileDrawer(setup, bounds, roadSize, paths, connections),
           ))
     ]);
+  }
+
+  List<AccessPoint> _randomAccessPoints() {
+    final random = math.Random();
+    final sides = [
+      const [AccessPoint.ne1, AccessPoint.ne2, AccessPoint.ne3],
+      const [AccessPoint.nw1, AccessPoint.nw2, AccessPoint.nw3],
+      const [AccessPoint.se1, AccessPoint.se2, AccessPoint.se3],
+      const [AccessPoint.sw1, AccessPoint.sw2, AccessPoint.sw3]
+    ];
+
+    return List(random.nextInt(3) + 2)
+        .map((_) =>
+            sides.removeAt(random.nextInt(sides.length))[random.nextInt(3)])
+        .toList(growable: false);
+  }
+
+  Point _resolveStartingPoint(AccessPoint accessPoint) {
+    final toIndex = (int offset) => offset * 24;
+
+    switch (accessPoint) {
+      case AccessPoint.nw1:
+        return network.connections[toIndex(0)].start;
+      case AccessPoint.nw2:
+        return network.connections[toIndex(1)].start;
+      case AccessPoint.nw3:
+        return network.connections[toIndex(2)].start;
+      case AccessPoint.ne1:
+        return network.connections[toIndex(3)].start;
+      case AccessPoint.ne2:
+        return network.connections[toIndex(4)].start;
+      case AccessPoint.ne3:
+        return network.connections[toIndex(5)].start;
+      case AccessPoint.sw1:
+        return network.connections[toIndex(6)].start;
+      case AccessPoint.sw2:
+        return network.connections[toIndex(7)].start;
+      case AccessPoint.sw3:
+        return network.connections[toIndex(8)].start;
+      case AccessPoint.se1:
+        return network.connections[toIndex(9)].start;
+      case AccessPoint.se2:
+        return network.connections[toIndex(10)].start;
+      case AccessPoint.se3:
+        return network.connections[toIndex(11)].start;
+    }
+
+    return null;
+  }
+
+  Point _resolveEndingPoint(AccessPoint accessPoint) {
+    final toIndex = (int offset) => offset * 24 + 7;
+
+    switch (accessPoint) {
+      case AccessPoint.nw1:
+        return network.connections[toIndex(0)].end;
+      case AccessPoint.nw2:
+        return network.connections[toIndex(1)].end;
+      case AccessPoint.nw3:
+        return network.connections[toIndex(2)].end;
+      case AccessPoint.ne1:
+        return network.connections[toIndex(3)].end;
+      case AccessPoint.ne2:
+        return network.connections[toIndex(4)].end;
+      case AccessPoint.ne3:
+        return network.connections[toIndex(5)].end;
+      case AccessPoint.sw1:
+        return network.connections[toIndex(6)].end;
+      case AccessPoint.sw2:
+        return network.connections[toIndex(7)].end;
+      case AccessPoint.sw3:
+        return network.connections[toIndex(8)].end;
+      case AccessPoint.se1:
+        return network.connections[toIndex(9)].end;
+      case AccessPoint.se2:
+        return network.connections[toIndex(10)].end;
+      case AccessPoint.se3:
+        return network.connections[toIndex(11)].end;
+    }
+
+    return null;
   }
 }
 

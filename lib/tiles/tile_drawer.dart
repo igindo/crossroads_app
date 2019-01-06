@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:crossroads/crossroads.dart'
-    show resolveConnection, Connection, Point, Network;
+import 'package:crossroads/crossroads.dart' show Connection, Point;
 
 import 'package:crossroads_app/tiles/calc.dart';
 import 'package:crossroads_app/tiles/tile_setup.dart';
@@ -10,91 +9,11 @@ class TileDrawer extends CustomPainter {
   final TileSetup setup;
   final Bounds bounds;
   final Point roadSize;
-  final Network network;
-  final List<List<Connection>> paths = <List<Connection>>[];
-  final Set<Connection> connections = Set<Connection>();
+  final List<List<Connection>> paths;
+  final List<Connection> connections;
 
-  TileDrawer(this.setup, this.bounds, this.roadSize, this.network) {
-    setup.accesPoints.forEach((start) {
-      setup.accesPoints.where((ap) => ap != start).forEach((end) {
-        final pathA = resolveConnection(network, _resolveStartingPoint(start),
-                _resolveEndingPoint(end)),
-            pathB = resolveConnection(network, _resolveStartingPoint(end),
-                _resolveEndingPoint(start));
-
-        paths.add(pathA);
-        paths.add(pathB);
-
-        connections..addAll(pathA)..addAll(pathB);
-      });
-    });
-  }
-
-  Point _resolveStartingPoint(AccessPoint accessPoint) {
-    final toIndex = (int offset) => offset * 24;
-
-    switch (accessPoint) {
-      case AccessPoint.nw1:
-        return network.connections[toIndex(0)].start;
-      case AccessPoint.nw2:
-        return network.connections[toIndex(1)].start;
-      case AccessPoint.nw3:
-        return network.connections[toIndex(2)].start;
-      case AccessPoint.ne1:
-        return network.connections[toIndex(3)].start;
-      case AccessPoint.ne2:
-        return network.connections[toIndex(4)].start;
-      case AccessPoint.ne3:
-        return network.connections[toIndex(5)].start;
-      case AccessPoint.sw1:
-        return network.connections[toIndex(6)].start;
-      case AccessPoint.sw2:
-        return network.connections[toIndex(7)].start;
-      case AccessPoint.sw3:
-        return network.connections[toIndex(8)].start;
-      case AccessPoint.se1:
-        return network.connections[toIndex(9)].start;
-      case AccessPoint.se2:
-        return network.connections[toIndex(10)].start;
-      case AccessPoint.se3:
-        return network.connections[toIndex(11)].start;
-    }
-
-    return null;
-  }
-
-  Point _resolveEndingPoint(AccessPoint accessPoint) {
-    final toIndex = (int offset) => offset * 24 + 7;
-
-    switch (accessPoint) {
-      case AccessPoint.nw1:
-        return network.connections[toIndex(0)].end;
-      case AccessPoint.nw2:
-        return network.connections[toIndex(1)].end;
-      case AccessPoint.nw3:
-        return network.connections[toIndex(2)].end;
-      case AccessPoint.ne1:
-        return network.connections[toIndex(3)].end;
-      case AccessPoint.ne2:
-        return network.connections[toIndex(4)].end;
-      case AccessPoint.ne3:
-        return network.connections[toIndex(5)].end;
-      case AccessPoint.sw1:
-        return network.connections[toIndex(6)].end;
-      case AccessPoint.sw2:
-        return network.connections[toIndex(7)].end;
-      case AccessPoint.sw3:
-        return network.connections[toIndex(8)].end;
-      case AccessPoint.se1:
-        return network.connections[toIndex(9)].end;
-      case AccessPoint.se2:
-        return network.connections[toIndex(10)].end;
-      case AccessPoint.se3:
-        return network.connections[toIndex(11)].end;
-    }
-
-    return null;
-  }
+  TileDrawer(
+      this.setup, this.bounds, this.roadSize, this.paths, this.connections);
 
   @override
   void paint(Canvas canvas, Size size) {
